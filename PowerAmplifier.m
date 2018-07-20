@@ -91,7 +91,6 @@ classdef PowerAmplifier < handle
             X = obj.setup_basis_matrix(in);
             
             %% LS solution to get the optimal coefficients.
-            % TODO: Regularlization to improve condition of matrix for LS.
             %coeffs = (X'*X) \ (X'*y); 
             lambda = 0.001;
             coeffs = (X'*X + lambda*eye(size((X'*X)))) \ (X'*y);
