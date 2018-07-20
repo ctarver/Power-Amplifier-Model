@@ -15,7 +15,7 @@ This repo should show up in your project. Then just commit the new submodule to 
 To use the class, you still need to add the PowerAmplifier.m to your Matlab path.
 ```addpath(genpath(Power-Amplifier-Model))```
 
-### How to use the WARP class:
+### How to use the PowerAmplifier class:
 Initialize with:
 `pa = PowerAmplifier(order, memory_depth);`
 
