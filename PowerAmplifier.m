@@ -101,9 +101,7 @@ classdef PowerAmplifier < handle
             obj.poly_coeffs = coeffs_transpose.';
             
             %% NMSE of the derived PA
-            model_pa_output = obj.transmit(in);
-            
-            %obj.mse_of_fit = mean(abs(y-model_pa_output).^2);
+            model_pa_output = obj.transmit(in);  
             obj.nmse_of_fit = obj.calculate_nmse(y, model_pa_output);
         end
         
