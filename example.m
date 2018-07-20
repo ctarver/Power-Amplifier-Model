@@ -10,7 +10,7 @@
 
 % Setup the PA
 order = 7;          % Order must be odd
-memory_depth = 2;
+memory_depth = 4;
 pa = PowerAmplifier(order, memory_depth);
 
 % Setup TX Signal

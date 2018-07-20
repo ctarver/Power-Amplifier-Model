@@ -77,6 +77,10 @@ classdef PowerAmplifier < handle
             %  doing the sum_i [y_i - (beta_0 x_i + beta_! x_i)^2]
             %  optimization. The PA model is linear with respect to the
             %  coefficients.
+            % 
+            %  I am using a Regularization. It helps with the condition of the matrix
+            %  http://www.signal.uu.se/Research/PCCWIP/Visbyrefs/Viberg_Visby04.pdf
+            %  I just used a really small lambda.  
             %
             %	Author:	Chance Tarver (2018)
             %		tarver.chance@gmail.com
@@ -88,10 +92,12 @@ classdef PowerAmplifier < handle
             
             %% LS solution to get the optimal coefficients.
             % TODO: Regularlization to improve condition of matrix for LS.
-            coeffs = (X'*X) \ (X'*y);
+            %coeffs = (X'*X) \ (X'*y); 
+            lambda = 0.001;
+            coeffs = (X'*X + lambda*eye(size((X'*X)))) \ (X'*y);
             
             %Reshape for easier to understand matrix of coeffs
-            coeffs_transpose = reshape(coeffs, [obj.memory_depth, obj.convert_order_to_number_of_coeffs]);
+            coeffs_transpose = reshape(coeffs, [obj.memory_depth, obj.convert_order_to_number_of_coeffs]);            
             obj.poly_coeffs = coeffs_transpose.';
             
             %% NMSE of the derived PA
