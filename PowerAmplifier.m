@@ -1,4 +1,4 @@
-classdef PowerAmplifier < handle
+classdef PowerAmplifier
     %PowerAmplifier Construct a PA, broadcast throough it, or model a PA.
     
     properties
