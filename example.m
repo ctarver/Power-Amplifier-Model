@@ -9,15 +9,18 @@
 %% ------------- BEGIN CODE --------------
 
 % Setup the PA
-order = 7;          % Order must be odd
-memory_depth = 4;
-pa = PowerAmplifier(order, memory_depth);
+params.order = 7;          % Order must be odd
+params.memory_depth = 4;
+params.noise_variance = 0.05;
+params.add_lo_leakage = 1;
+params.add_iq_imbalance = 1;
+pa = PowerAmplifier(params);
 
 % Setup TX Signal
 tx_length = 2^17;
 ts_tx = 1/40e6;
 t = [0:ts_tx:((tx_length - 1) * ts_tx)].';   % Create time vector (Sample Frequency is ts_tx (Hz))
-tx_Data = 0.6 * exp(1i*2*pi * 2e6 * t) + 0.2 * exp(1i*2*pi * -3e6 * t); 
+tx_Data = 0.6 * exp(1i*2*pi * 2e6 * t) + 0.2 * exp(1i*2*pi * -3e6 * t);
 
 % Transmit through the PA
 rx_Data = pa.transmit(tx_Data);

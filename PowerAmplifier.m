@@ -2,33 +2,56 @@ classdef PowerAmplifier
     %PowerAmplifier Construct a PA, broadcast throough it, or model a PA.
     
     properties
-        poly_coeffs  %matrix where each column corresponds to memory effects and each row is for a nonlinearity.
-        order
-        memory_depth
-        nmse_of_fit
+        poly_coeffs  % Matrix where each column corresponds to memory effects and each row is for a nonlinearity.
+        order        % Max nonlinear order considered
+        memory_depth % Max number of taps in the filter for the memory effects
+        nmse_of_fit  % Fit of the PA model to some input/ouput data. Calculated automatically when making a model
+        noise_variance % Amount of thermal noise. Small value.
+        lo_leakage % Magnitude of local oscillator leakage
+        K1 % Gain on the main branch of IQ imbalance
+        K2 % Gain on the conjugate branch of IQ imbalance
     end
     
     methods
-        function obj = PowerAmplifier(order, memory_depth)
+        function obj = PowerAmplifier(params)
             %POWERAMPLIFIER Construct an instance of this class.
             % This will initialize with a basic Parallel Hammerstein PA model
             % that was extracted from a WARP board.
             %
-            % Args:
-            %     order:        int with PA order. Should be odd. 1, 3, 5, etc.
-            %     memory_depth: int with number of taps in FIR filter
             
             if nargin == 0
-                order = 7;
-                memory_depth = 4;
+                params.order = 7;
+                params.memory_depth = 4;
+                params.noise_variance = 0.05;
+                params.add_lo_leakage = 1;
+                params.add_iq_imbalance = 1;
             end
             
-            if mod(order,2) == 0
+            if mod(params.order,2) == 0
                 error('Order must be odd.');
             end
             
-            obj.order = order;
-            obj.memory_depth = memory_depth;
+            obj.order = params.order;
+            obj.memory_depth = params.memory_depth;
+            
+            if params.add_lo_leakage
+                obj.lo_leakage = 0.01*randn() + 0.01i * randn();
+            else
+                obj.lo_leakage = 0;
+            end
+            
+            if params.add_iq_imbalance
+                % I/Q mismatch parameters:
+                gm = 1.07; pm = 5/180*pi;
+                K1 = 0.5*(1+gm*exp(1i*pm)); K2 = 0.5*(1-gm*exp(1i*pm));
+                % scale the mismatch parameters so that signal power is unchanged
+                scIQ = 1/sqrt(abs(K1)^(2)+abs(K2)^(2));
+                obj.K1 = scIQ*K1; obj.K2 = scIQ*K2;
+            else
+                obj.K1 = 1; obj.K2 = 0;
+            end
+            
+            obj.noise_variance = params.noise_variance;
             
             % Default polynomial coeffs derived from a WARP board.
             default_poly_coeffs = [ 0.9295 - 0.0001i, 0.2939 + 0.0005i, -0.1270 + 0.0034i, 0.0741 - 0.0018i;  % 1st order coeffs
@@ -37,7 +60,7 @@ classdef PowerAmplifier
                 0.1774 + 0.0265i, 0.0848 + 0.0613i, -0.0362 - 0.0307i, 0.0415 + 0.0429i]; % 7th order coeffs
             
             % Prune the model to have the desired number of nonlinearities and memory effects.
-            obj.poly_coeffs = default_poly_coeffs(1:obj.convert_order_to_number_of_coeffs, 1:memory_depth);
+            obj.poly_coeffs = default_poly_coeffs(1:obj.convert_order_to_number_of_coeffs, 1:obj.memory_depth);
         end
         
         
@@ -54,10 +77,10 @@ classdef PowerAmplifier
             %	Author:	Chance Tarver (2018)
             %		tarver.chance@gmail.com
             %
-            
+            in = obj.K1*in + obj.K2*conj(in);
             X = obj.setup_basis_matrix(in);
             coeffs = reshape(obj.poly_coeffs.',[],1);
-            pa_output = X * coeffs;
+            pa_output = X * coeffs + obj.noise_variance*rand(length(in),1);          
         end
         
         
@@ -77,10 +100,10 @@ classdef PowerAmplifier
             %  doing the sum_i [y_i - (beta_0 x_i + beta_! x_i)^2]
             %  optimization. The PA model is linear with respect to the
             %  coefficients.
-            % 
+            %
             %  I am using a Regularization. It helps with the condition of the matrix
             %  http://www.signal.uu.se/Research/PCCWIP/Visbyrefs/Viberg_Visby04.pdf
-            %  I just used a really small lambda.  
+            %  I just used a really small lambda.
             %
             %	Author:	Chance Tarver (2018)
             %		tarver.chance@gmail.com
@@ -91,16 +114,16 @@ classdef PowerAmplifier
             X = obj.setup_basis_matrix(in);
             
             %% LS solution to get the optimal coefficients.
-            %coeffs = (X'*X) \ (X'*y); 
+            %coeffs = (X'*X) \ (X'*y);
             lambda = 0.001;
             coeffs = (X'*X + lambda*eye(size((X'*X)))) \ (X'*y);
             
             %Reshape for easier to understand matrix of coeffs
-            coeffs_transpose = reshape(coeffs, [obj.memory_depth, obj.convert_order_to_number_of_coeffs]);            
+            coeffs_transpose = reshape(coeffs, [obj.memory_depth, obj.convert_order_to_number_of_coeffs]);
             obj.poly_coeffs = coeffs_transpose.';
             
             %% NMSE of the derived PA
-            model_pa_output = obj.transmit(in);  
+            model_pa_output = obj.transmit(in);
             obj.nmse_of_fit = obj.calculate_nmse(y, model_pa_output);
         end
         
