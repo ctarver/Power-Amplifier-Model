@@ -17,13 +17,15 @@ To use the class, you still need to add the PowerAmplifier.m to your Matlab path
 
 ### How to use the PowerAmplifier class:
 Initialize with:
-`pa = PowerAmplifier(order, memory_depth);`
+`pa = PowerAmplifier(params);`
 
-The inputs should be as follows:
-  `order`: The order of the PA model. This must be odd.
-  `memory_depth`: Number of memory taps in the PA model. 
+The input params  should be as follows:
+  - `params.order`: Odd, positive integer that is the highest nonlinear, polynomial term considered in the model. 
+  - `params.memory_depth`: Integer that represents the number of taps in the filters that model the memory effects. 
+  - `params.noise_variance`: Small, decimal value that is an additional gaussian noise added to the PA output to be more realistic. Like thermal noise.  
+  - `params.add_lo_leakage`: Boolean flag to add a constant to model local oscillator leakage.
+  - `params.add_iq_imbalance`: Boolean flag to add IQ imbalance. The actual severeity of the imbalance can be modified in the class constructor. 
   
 To send something through the PA model, simply use the transmit method, `rx_Data = pa.transmit(tx_Data)`. 
 
 Checkout the example.m to see more. 
-              
