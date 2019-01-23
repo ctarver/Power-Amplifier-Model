@@ -1,5 +1,5 @@
 classdef PowerAmplifier
-    %PowerAmplifier Construct a PA, broadcast throough it, or model a PA.
+    %PowerAmplifier Construct a PA, broadcast through it, or model a PA.
     
     properties
         poly_coeffs  % Matrix where each column corresponds to memory effects and each row is for a nonlinearity.
@@ -63,7 +63,6 @@ classdef PowerAmplifier
             obj.poly_coeffs = default_poly_coeffs(1:obj.convert_order_to_number_of_coeffs, 1:obj.memory_depth);
         end
         
-        
         function pa_output = transmit(obj, in)
             %transmit Broadcast the input data using the PA model currently stored in
             %the object.
@@ -82,7 +81,6 @@ classdef PowerAmplifier
             coeffs = reshape(obj.poly_coeffs.',[],1);
             pa_output = X * coeffs + obj.noise_variance*rand(length(in),1);          
         end
-        
         
         function obj = make_pa_model(obj, in, out)
             %make_pa_model	Learn a PA model
@@ -127,13 +125,11 @@ classdef PowerAmplifier
             obj.nmse_of_fit = obj.calculate_nmse(y, model_pa_output);
         end
         
-        
         function nmse = calculate_nmse(~, desired, actual)
             %calculate_nmse. Calculate the normalized mean square error.
             % equivalent to sum (error)2 / sum(desired)^2
             nmse = norm(desired - actual)^2 / norm(desired)^2;
-        end
-        
+        end  
         
         function X = setup_basis_matrix(obj, x)
             %setup_basis_matrix. Setup the basis matrix for the LS learning of
@@ -163,8 +159,7 @@ classdef PowerAmplifier
                     count = count + 1;
                 end
             end
-        end
-        
+        end   
         
         function number_of_coeffs = convert_order_to_number_of_coeffs(obj, order)
             %convert_order_to_number_of_coeffs. Helper function to easily
