@@ -79,7 +79,8 @@ classdef PowerAmplifier
             in = obj.K1*in + obj.K2*conj(in);
             X = obj.setup_basis_matrix(in);
             coeffs = reshape(obj.poly_coeffs.',[],1);
-            pa_output = X * coeffs + obj.noise_variance*rand(length(in),1);          
+            lo_leackage_vector = obj.lo_leakage * ones(length(in), 1);
+            pa_output = X * coeffs + obj.noise_variance*rand(length(in),1) + lo_leackage_vector;          
         end
         
         function obj = make_pa_model(obj, in, out)
